@@ -1,0 +1,38 @@
+# Sensitive configuration (downloaded from Secrets Manager at runtime)
+config.yaml
+
+# Credentials (gwsa files: client_secrets.json, credentials.json, user_token.json)
+user_token.json
+client_secrets.json
+credentials.json
+.env
+
+# Git
+.git/
+.gitignore
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+
+# IDE
+.vscode/
+.idea/
+
+# Terraform
+terraform/
+
+# Test and coverage
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Processed email records
+processed_*.json
+
+# Documentation
+*.md
+LICENSE

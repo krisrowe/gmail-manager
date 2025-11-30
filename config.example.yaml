@@ -1,0 +1,142 @@
+# Gmail Manager Rules Configuration (Example)
+# Copy this file to config.yaml and customize for your needs
+#
+# LABELING STRATEGY FOR ARCHIVAL:
+# When a rule specifies inbox_days > 0, the tool automatically applies the label defined below.
+# This allows users to easily filter and review emails marked for future archival in Gmail.
+#
+# Settings:
+required_label: "INBOX"  # Label emails must have to be processed
+auto_archive_label: "Auto Archive"
+page_size: 50
+
+# Rules use client-side regex matching on email fields:
+# - match: positive criteria (all must match - AND logic)
+#   - sender: regex pattern for From field
+#   - subject: regex pattern for email subject
+#   - body: regex pattern for email body
+#   - label_includes: check if labelIds contains this label
+# - exclude: negative criteria (if any match, email is excluded - OR logic)
+#   - any: matches in any field (subject, body, headers, etc.)
+#   - subject: matches only in subject line
+#   - body: matches only in email body
+#
+# All regex patterns use single quotes to avoid YAML escape conflicts
+# All matching is case-insensitive by default
+# inbox_days: Days to keep in Inbox (-1 = never archive, 0 = immediately, N = after N days)
+#             Rules with inbox_days > 0 automatically get the "Auto Archive" label applied
+
+rules:
+  # Mark bills as important and keep in inbox for 30 days
+  - name: "Bills"
+    match:
+      subject: 'Bill due'
+    label: Bills
+    mark_important: true
+    inbox_days: 30
+
+  # Match sender domain with exclusions for specific names
+  - name: "Organization Newsletter"
+    match:
+      sender: 'example\.org'
+    exclude:
+      subject: 'Progress Report'
+      any:
+        - 'PersonName1'
+        - 'PersonName2'
+    label: Newsletter
+    inbox_days: 7
+
+  # Match sender and subject together
+  - name: "Daily Digest"
+    match:
+      sender: 'notifications@example\.com'
+      subject: 'Your Daily Digest'
+    inbox_days: 3
+
+  # Match body content for specific patterns
+  - name: "Small Recurring Charges"
+    match:
+      sender: 'receipts@example\.com'
+      subject: 'Your receipt'
+      body: '\$0\.99'
+    label: Skipped
+    inbox_days: 0
+
+  # Use label_includes to process emails with specific Gmail labels
+  - name: "Archivable"
+    match:
+      label_includes: 'Archivable'
+    inbox_days: 7
+
+  # Never archive important emails (inbox_days: -1)
+  - name: "Medical Results"
+    match:
+      subject: 'Your test results are ready'
+    mark_important: true
+    inbox_days: -1
+
+  # Use regex OR patterns in subject
+  - name: "Account Statements"
+    match:
+      subject: '(statement is ready|statement is available|Your.*Statement)'
+    exclude:
+      subject: '(late|overdue)'
+    label: null
+    inbox_days: 3
+
+  # Immediately archive policy update emails
+  - name: "Terms of Service / Privacy Policy Updates"
+    match:
+      subject: 'terms of (service|use)|privacy polic|(update|change).*(polic|terms)'
+    label: null
+    inbox_days: 0
+
+  # Complex exclusion patterns
+  - name: "Property Management"
+    match:
+      sender: 'management@example\.com'
+    exclude:
+      any:
+        - 'Annual Assessment'
+        - 'Statement'
+        - 'Violation'
+        - 'Payment'
+    label: null
+    inbox_days: 7
+
+  # Skip feedback request emails
+  - name: "Skip Inbox for Feedback Requests"
+    match:
+      subject: '(your feedback|your opinion)'
+    inbox_days: 0
+
+  # Disabled rules (won't be processed)
+  - name: "Payment App Notifications"
+    match:
+      sender: 'notifications@paymentapp\.com'
+      subject: '(you paid|payment received)'
+    label: null
+    inbox_days: 0
+    enabled: false
+
+  # Payment confirmations
+  - name: "Payment Confirmation"
+    match:
+      subject: 'Thank you for your payment'
+    label: null
+    inbox_days: 1
+
+  # Security alerts - keep longer for review
+  - name: "Security Alert"
+    match:
+      sender: 'security@example\.com'
+      subject: 'Security alert'
+    label: null
+    inbox_days: 5
+
+  # Verification codes - short retention
+  - name: "Verification Codes"
+    match:
+      subject: '(?=.*your)(?=.*code)'
+    inbox_days: 1

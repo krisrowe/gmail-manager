@@ -1,0 +1,14 @@
+# Integration Test Configuration
+# Uses "Test" label instead of INBOX to avoid affecting production emails
+
+# Settings:
+required_label: "Test"
+auto_archive_label: "Auto Archive"
+page_size: 50
+
+rules:
+  - name: "USPS Daily Digest"
+    match:
+      sender: 'usps\.com'
+      subject: 'Daily Digest'
+    inbox_days: 3

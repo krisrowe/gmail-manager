@@ -1,0 +1,33 @@
+[build-system]
+requires = ["setuptools>=45", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "gmail-manager"
+version = "0.1.0"
+description = "Gmail management tool using gworkspace-access (gwsa) CLI"
+requires-python = ">=3.8"
+authors = [
+    {name = "Personal", email = "personal@example.com"},
+]
+dependencies = [
+    "pyyaml>=6.0",
+    "gwsa-cli @ git+https://github.com/krisrowe/gworkspace-access.git",
+]
+
+[project.optional-dependencies]
+cloud = [
+    "google-cloud-secret-manager>=2.0.0",
+]
+dev = [
+    "pytest>=7.0",
+]
+
+[project.scripts]
+gmail-manager = "gmail_manager:main"
+gmail-manager-report = "report:main"
+gmail-manager-rules-usage = "rules_usage:main"
+gmail-manager-gwsa-status = "gwsa_status:main"
+
+[tool.setuptools]
+py-modules = ["gmail_manager", "cloud_secrets", "report", "rules_usage", "gwsa_status"]
