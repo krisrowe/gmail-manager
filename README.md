@@ -278,7 +278,7 @@ See [terraform/README.md](terraform/README.md).
 
 ### Running Pre-commit Checks
 
-Before committing, always run:
+Before committing, always run [devws](https://github.com/krisrowe/ws-sync) precommit:
 
 ```bash
 devws precommit
@@ -367,15 +367,18 @@ cp config.example.yaml config.yaml
 # Option 2: Download from Secrets Manager (if already deployed)
 gcloud secrets versions access latest --secret=gmail-manager-config --project=$PROJECT_ID > config.yaml
 
-# Option 3: Restore from devws backup
-devws restore config.yaml
+# Option 3: Restore from devws secrets
+devws secrets get gmail-manager-config --output-file config.yaml
 ```
 
-Use `devws` CLI to backup/restore your config:
+Use `devws secrets` to backup/restore your config via Google Cloud Secret Manager:
 
 ```bash
-devws backup config.yaml
-devws restore config.yaml
+# Backup config to Secret Manager
+devws secrets put gmail-manager-config --file config.yaml
+
+# Restore config from Secret Manager
+devws secrets get gmail-manager-config --output-file config.yaml
 ```
 
 The `config.yaml` file is gitignored. If it was previously committed, remove it from git history before the gitignore takes effect:
