@@ -341,6 +341,26 @@ Potential improvement: upload token immediately after refresh via signal handler
 
 Before making this repository public, audit the git history to ensure no sensitive data (personal names, vendor names, project IDs, etc.) remains from historical commits. Use tools like `git filter-repo` or BFG Repo-Cleaner to scrub history if needed.
 
+### Gemini-Powered Calendar Event Extraction
+
+Add rule-level configuration to scan emails for calendar events using the Gemini API. When enabled on a rule, matching emails would be analyzed to extract events (dates, times, locations, descriptions) and automatically create calendar entries via `gwsa calendar` commands (yet to be built).
+
+Example use case: Emails from a school district could be scanned for events like parent-teacher conferences, school closures, or activity dates, and those would be added to Google Calendar automatically.
+
+Proposed rule configuration:
+```yaml
+rules:
+  - name: "School District Events"
+    filter: 'from:@myschooldistrict.org'
+    label: School
+    extract_calendar_events: true  # Enable Gemini-based event extraction
+```
+
+This feature would require:
+- Integration with the Gemini API for natural language event extraction
+- New `gwsa calendar create` command for adding calendar entries
+- Event deduplication to avoid creating duplicate entries on re-runs
+
 ## Configuration Management
 
 The `config.yaml` file contains sensitive information and is not bundled in the Docker image. It is stored in Secrets Manager and downloaded at runtime.
