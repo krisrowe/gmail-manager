@@ -34,12 +34,12 @@ pip install -e .
 gwsa setup
 ```
 
-### Installing personal-gmail-manager
+### Installing gmail-manager
 
 ```bash
 # Clone this repository
-git clone https://github.com/krisrowe/personal-gmail-manager.git
-cd personal-gmail-manager
+git clone https://github.com/krisrowe/gmail-manager.git
+cd gmail-manager
 
 # Install Python dependencies
 pip install -r requirements.txt
