@@ -67,3 +67,7 @@ terraform/*.tfstate
 terraform/*.tfstate.backup
 terraform/.terraform.lock.hcl
 terraform/.terraform.tfstate.lock.info
+
+# user-files
+config.yaml
+terraform/*.tfstate

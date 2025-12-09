@@ -99,7 +99,7 @@ class PaginationFetcher:
             Tuple of (list of emails on this page, response metadata)
         """
         # Build gwsa command with pagination support
-        cmd = ['gwsa', 'mail', 'search', f'label:{self.required_label}', '--max-results', str(self.max_results), '--format', 'full']
+        cmd = ['gwsa', 'mail', 'search', f'label:{self.required_label}', '--max-results', str(self.max_results), '--format', 'metadata']
 
         if page_token:
             cmd.extend(['--page-token', page_token])

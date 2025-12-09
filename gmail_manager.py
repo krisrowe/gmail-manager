@@ -149,19 +149,22 @@ def mark_important(email_id: str) -> bool:
         return False
 
 
-def archive_email(email_id: str, required_label: str = "INBOX") -> bool:
-    """Archive an email (remove required_label)"""
+def archive_email(email_id: str, required_label: str = "INBOX", final_archive_label: str = "Archive Complete") -> bool:
+    """Archive an email (remove required_label) and apply final archive label"""
     try:
+        # First, remove the INBOX label
         result = subprocess.run(
             ['gwsa', 'mail', 'label', email_id, required_label, '--remove'],
             capture_output=True,
             text=True,
             check=True
         )
-        # Just check for success
-        if result.returncode == 0:
-            return True
-        return False
+        if result.returncode != 0:
+            return False
+
+        # Then, add the final archive label
+        return add_label(email_id, final_archive_label)
+
     except subprocess.CalledProcessError as e:
         print(f"Error archiving {email_id}: {e.stderr}")
         return False
@@ -293,8 +296,13 @@ def parse_arguments():
     parser.add_argument(
         '--limit',
         type=int,
-        default=20,
-        help='Maximum number of emails to process/update (label, mark important, archive). Default: 20.'
+        default=None,
+        help='Maximum number of emails to process/update (label, mark important, archive). Default: 50.'
+    )
+    parser.add_argument(
+        '--dry-run',
+        action='store_true',
+        help='Run the script without making any changes. It will simulate actions and show what would be done.'
     )
 
     return parser.parse_args()
@@ -330,7 +338,14 @@ def main():
     # Get settings from config
     required_label = config.get('required_label', 'INBOX')
     auto_archive_label = config.get('auto_archive_label', 'Auto Archive')
+    final_archive_label = config.get('final_archive_label', 'Archived')
     page_size = config.get('page_size', 20)
+    
+    # Determine limit with new hierarchy: CLI arg > config.yaml > hardcoded default
+    if args.limit is not None:
+        limit = args.limit
+    else:
+        limit = config.get('limit', 50)
 
     rules = config['rules']
     if not rules:
@@ -391,6 +406,9 @@ def main():
         email_id = email.get('id')
         if not email_id:
             continue
+
+        # Add sender field for RuleMatcher compatibility
+        email['sender'] = email.get('from', '')
 
         # Check if we've hit the global limit on emails to evaluate
         if remaining_limit is not None and emails_evaluated >= remaining_limit:
@@ -487,7 +505,7 @@ def main():
                 logger.debug(f"Email {email_id} (rule: {rule_name}): final_inbox_days=0, checking should_archive(0)")
                 if should_archive(email.get('date', ''), 0):
                     logger.debug(f"Email {email_id}: should_archive=True, attempting to archive")
-                    if archive_email(email_id, required_label):
+                    if archive_email(email_id, required_label, final_archive_label):
                         stat.emails_archived += 1
                         action = "archived"
                         actions_taken += 1
@@ -509,7 +527,7 @@ def main():
                 logger.debug(f"Email {email_id} (rule: {rule_name}): final_inbox_days={final_inbox_days}, checking should_archive({final_inbox_days})")
                 if should_archive(email.get('date', ''), final_inbox_days):
                     logger.debug(f"Email {email_id}: should_archive=True, attempting to archive")
-                    if archive_email(email_id, required_label):
+                    if archive_email(email_id, required_label, final_archive_label):
                         stat.emails_archived += 1
                         action = "archived"
                         actions_taken += 1

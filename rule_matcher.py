@@ -16,6 +16,7 @@ class MatchCriteria:
     subject: Optional[str] = None
     body: Optional[str] = None
     label_includes: Optional[str] = None
+    to: Optional[str] = None
 
 
 @dataclass
@@ -24,6 +25,7 @@ class ExcludeCriteria:
     any: List[str] = None  # Matches in any field
     subject: List[str] = None  # Matches only in subject
     body: List[str] = None  # Matches only in body
+    to: List[str] = None # Matches only in to
 
     def __post_init__(self):
         if self.any is None:
@@ -32,6 +34,8 @@ class ExcludeCriteria:
             self.subject = []
         if self.body is None:
             self.body = []
+        if self.to is None:
+            self.to = []
 
 
 class RuleMatcher:
@@ -64,7 +68,8 @@ class RuleMatcher:
             sender=match_config.get('sender'),
             subject=match_config.get('subject'),
             body=match_config.get('body'),
-            label_includes=match_config.get('label_includes')
+            label_includes=match_config.get('label_includes'),
+            to=match_config.get('to')
         )
 
         # Parse exclude criteria
@@ -72,7 +77,8 @@ class RuleMatcher:
         exclude_criteria = ExcludeCriteria(
             any=exclude_config.get('any', []),
             subject=[exclude_config.get('subject')] if exclude_config.get('subject') else [],
-            body=[exclude_config.get('body')] if exclude_config.get('body') else []
+            body=[exclude_config.get('body')] if exclude_config.get('body') else [],
+            to=[exclude_config.get('to')] if exclude_config.get('to') else []
         )
 
         # Check positive criteria (all must match)
@@ -111,6 +117,16 @@ class RuleMatcher:
             if not self._regex_search(criteria.body, body):
                 return False
 
+        # Check to recipient
+        if criteria.to:
+            to_recipients = email.get('to', '')
+            cc_recipients = email.get('cc', '')
+            bcc_recipients = email.get('bcc', '')
+            list_id = email.get('list_id', '')
+            all_recipients = ' '.join(filter(None, [to_recipients, cc_recipients, bcc_recipients, list_id]))
+            if not self._regex_search(criteria.to, all_recipients):
+                return False
+
         return True
 
     def _matches_negative(self, email: Dict[str, Any], criteria: ExcludeCriteria) -> bool:
@@ -118,12 +134,18 @@ class RuleMatcher:
         sender = email.get('sender', '')
         subject = email.get('subject', '')
         body = email.get('body', '') or email.get('snippet', '')
+        to_recipients = email.get('to', '')
+        cc_recipients = email.get('cc', '')
+        bcc_recipients = email.get('bcc', '')
+        list_id = email.get('list_id', '')
+        all_recipients = ' '.join(filter(None, [to_recipients, cc_recipients, bcc_recipients, list_id]))
 
         # Check any-field exclusions
         for pattern in criteria.any:
             if self._regex_search(pattern, sender) or \
                self._regex_search(pattern, subject) or \
-               self._regex_search(pattern, body):
+               self._regex_search(pattern, body) or \
+               self._regex_search(pattern, all_recipients):
                 return True
 
         # Check subject exclusions
@@ -134,6 +156,11 @@ class RuleMatcher:
         # Check body exclusions
         for pattern in criteria.body or []:
             if self._regex_search(pattern, body):
+                return True
+
+        # Check to exclusions
+        for pattern in criteria.to or []:
+            if self._regex_search(pattern, all_recipients):
                 return True
 
         return False

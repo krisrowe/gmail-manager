@@ -8,6 +8,7 @@
 # Settings:
 required_label: "INBOX"  # Label emails must have to be processed
 auto_archive_label: "Auto Archive"
+final_archive_label: "Archived"
 page_size: 50
 
 # Rules use client-side regex matching on email fields:
